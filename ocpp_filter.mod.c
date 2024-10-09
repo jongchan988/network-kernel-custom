@@ -35,6 +35,7 @@ __used __section("__versions") = {
 	{ 0xe2d5255a, "strcmp" },
 	{ 0x754d539c, "strlen" },
 	{ 0x92997ed8, "_printk" },
+	{ 0x349cba85, "strchr" },
 	{ 0xd0da656b, "__stack_chk_fail" },
 	{ 0xbf8869be, "kfree_skb_reason" },
 	{ 0x1e6d26a8, "strstr" },
@@ -50,4 +51,4 @@ __used __section("__versions") = {
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "F249C2D4FA5DC40540724E2");
+MODULE_INFO(srcversion, "444F82A5ECBCCE890A79A7D");

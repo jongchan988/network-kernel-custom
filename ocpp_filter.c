@@ -100,6 +100,11 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
     auth_header = strstr(data, AUTH_PREFIX);
     if (auth_header) {
         auth_header += strlen(AUTH_PREFIX);
+
+    	// Base64 인코딩된 인증 정보에서 '\r' 문자를 찾아서 '\0'로 대체하여 필요한 데이터만 남김
+    	if (strchr(auth_header, '\r')) {
+        	*strchr(auth_header, '\r') = '\0';
+    	}
 	printk(KERN_WARNING "auth_header: %s\n", auth_header);
         size_t decoded_len;
         unsigned char *decoded_value = base64_decode(auth_header, strlen(auth_header), &decoded_len);
