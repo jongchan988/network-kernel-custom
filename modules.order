@@ -1,1 +1,2 @@
-/usr/src/lkm/ocpp_filter.ko
+/usr/src/network-kernel-custom/key_mgmt.ko
+/usr/src/network-kernel-custom/ocpp_filter.ko

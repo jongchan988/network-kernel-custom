@@ -9,6 +9,10 @@
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/ctype.h>
+#include <linux/crypto.h>
+#include <crypto/hash.h>
+#include <linux/slab.h>
+#include <net/netfilter/ocpp_key_tb.h>
 
 #define AUTH_PREFIX "Authorization: Basic "
 #define EXPECTED_USERNAME "AL1000"
@@ -16,6 +20,52 @@
 
 static struct nf_hook_ops nfho;
 
+extern struct hlist_head key_table[OCPP_KEY_MGMT_HASH_TABLE_SIZE];
+
+static int validate_credentials(const char *username, const char *password) {
+    struct auth_key *key;
+    char combined_key[128]; // username:password 형태로 결합
+    char hash_output[32];
+    struct crypto_shash *tfm;
+    struct shash_desc *desc;
+    int ret;
+
+    snprintf(combined_key, sizeof(combined_key), "%s:%s", username, password);
+
+    // SHA-256 해시 계산
+    tfm = crypto_alloc_shash("sha256", 0, 0);
+    if (IS_ERR(tfm)) {
+        printk(KERN_ERR "Failed to allocate hash algorithm: sha256\n");
+        return PTR_ERR(tfm);
+    }
+
+    desc = kmalloc(sizeof(*desc) + crypto_shash_descsize(tfm), GFP_KERNEL);
+    if (!desc) {
+        crypto_free_shash(tfm);
+        return -ENOMEM;
+    }
+
+    desc->tfm = tfm;
+    ret = crypto_shash_digest(desc, combined_key, strlen(combined_key), hash_output);
+    if (ret < 0) {
+        printk(KERN_ERR "Hash calculation failed: %d\n", ret);
+        kfree(desc);
+        crypto_free_shash(tfm);
+        return ret;
+    }
+
+    crypto_free_shash(tfm);
+    kfree(desc);
+
+    // 해시 테이블에서 키 검색
+    hash_for_each_possible(key_table, key, hnode, *(u32 *)hash_output) {
+        if (memcmp(key->key, hash_output, 32) == 0) {
+            return 1; // 키가 존재함
+        }
+    }
+
+    return 0; // 키가 존재하지 않음
+}
 // Base64 인코딩 테이블 및 디코딩 테이블 생성 함수
 static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -101,30 +151,41 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
     if (auth_header) {
         auth_header += strlen(AUTH_PREFIX);
 
-    	// Base64 인코딩된 인증 정보에서 '\r' 문자를 찾아서 '\0'로 대체하여 필요한 데이터만 남김
-    	if (strchr(auth_header, '\r')) {
-        	*strchr(auth_header, '\r') = '\0';
-    	}
-	printk(KERN_WARNING "auth_header: %s\n", auth_header);
+        // Base64 디코딩
+        if (strchr(auth_header, '\r')) {
+            *strchr(auth_header, '\r') = '\0';
+        }
+
         size_t decoded_len;
         unsigned char *decoded_value = base64_decode(auth_header, strlen(auth_header), &decoded_len);
 
         if (!decoded_value) {
             printk(KERN_WARNING "Invalid Base64 in Authorization header\n");
             kfree_skb(skb_copy);
-            return NF_DROP; // Base64 디코딩 실패 시 드롭
+            return NF_DROP;
         }
 
-        decoded_value[decoded_len] = '\0'; // null-terminate the string
+        decoded_value[decoded_len] = '\0';
 
-        // Credentials 비교
-        if (compare_credentials((char *)decoded_value)) {
-            printk(KERN_INFO "Authorization success: %s\n", decoded_value);
-        } else {
-            printk(KERN_WARNING "Authorization failed: %s\n", decoded_value);
+        // ':' 기준으로 username과 password 분리
+        char *password = strchr((char *)decoded_value, ':');
+        if (!password) {
+            printk(KERN_WARNING "Invalid credentials format: %s\n", decoded_value);
             kfree(decoded_value);
             kfree_skb(skb_copy);
-            return NF_DROP; // 인증 실패 시 드롭
+            return NF_DROP;
+        }
+
+        *password++ = '\0'; // ':'를 null-terminate로 교체하여 username과 password 분리
+
+        // 키 관리 모듈을 통해 인증 확인
+        if (validate_credentials((char *)decoded_value, password)) {
+            printk(KERN_INFO "Authorization success: %s:%s\n", decoded_value, password);
+        } else {
+            printk(KERN_WARNING "Authorization failed: %s:%s\n", decoded_value, password);
+            kfree(decoded_value);
+            kfree_skb(skb_copy);
+            return NF_DROP;
         }
 
         kfree(decoded_value);

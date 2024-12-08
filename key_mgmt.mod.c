@@ -28,33 +28,33 @@ MODULE_INFO(retpoline, "Y");
 static const struct modversion_info ____versions[]
 __used __section("__versions") = {
 	{ 0x6c5c4afa, "module_layout" },
-	{ 0x4f10bec6, "nf_unregister_net_hook" },
-	{ 0x4b465b2e, "nf_register_net_hook" },
-	{ 0xb3a98141, "init_net" },
-	{ 0x15fe2c3f, "kfree_skb_reason" },
-	{ 0x754d539c, "strlen" },
-	{ 0x349cba85, "strchr" },
-	{ 0x1e6d26a8, "strstr" },
-	{ 0xdbbc063c, "skb_copy_expand" },
-	{ 0x87a21cb3, "__ubsan_handle_out_of_bounds" },
+	{ 0x64cfa846, "remove_proc_entry" },
+	{ 0x50061c0d, "proc_create" },
+	{ 0x96848186, "scnprintf" },
+	{ 0xd45cc6ca, "bin2hex" },
+	{ 0x6b10bee1, "_copy_to_user" },
 	{ 0x9ba84108, "kmem_cache_alloc_trace" },
 	{ 0xb4c43206, "kmalloc_caches" },
-	{ 0xcbd4898c, "fortify_panic" },
-	{ 0x92997ed8, "_printk" },
-	{ 0xd0da656b, "__stack_chk_fail" },
-	{ 0x228de854, "key_table" },
-	{ 0x37a0cba, "kfree" },
+	{ 0x449ad0a7, "memcmp" },
 	{ 0x6677e547, "crypto_shash_digest" },
-	{ 0xa916b694, "strnlen" },
-	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0xc37a2a2b, "crypto_destroy_tfm" },
 	{ 0xeb233a45, "__kmalloc" },
+	{ 0x37a0cba, "kfree" },
+	{ 0x228de854, "key_table" },
+	{ 0xd0da656b, "__stack_chk_fail" },
 	{ 0xe5d97e49, "crypto_alloc_shash" },
-	{ 0x656e4a6e, "snprintf" },
+	{ 0x754d539c, "strlen" },
+	{ 0xe2d5255a, "strcmp" },
+	{ 0x5b8239ca, "__x86_return_thunk" },
+	{ 0x92997ed8, "_printk" },
+	{ 0x87a21cb3, "__ubsan_handle_out_of_bounds" },
+	{ 0x85df9b6c, "strsep" },
+	{ 0x13c49cc2, "_copy_from_user" },
+	{ 0x88db9f48, "__check_object_size" },
 	{ 0xbdfb6dbb, "__fentry__" },
 };
 
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "0996E19D068ED455442EFE8");
+MODULE_INFO(srcversion, "C75350C595CC44427D1BA26");

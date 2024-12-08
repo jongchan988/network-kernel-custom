@@ -1,2 +1,2 @@
-/usr/src/lkm/ocpp_filter.o
+/usr/src/network-kernel-custom/ocpp_filter.o
 
